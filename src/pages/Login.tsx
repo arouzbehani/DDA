@@ -1,0 +1,25 @@
+import LoginPage from '../components/Login/LoginComponent_V1';
+
+const App: React.FC = () => {
+    const handleSuccess = () => {
+        console.log('User successfully logged in!');
+        // Additional actions after login can be added here
+    };
+
+    return (
+        <div>
+            <LoginPage
+                authUrl="http://localhost:5270/api/user/login"
+                storageKey="authToken"
+                cssClassName="custom-login-page"
+                emailLabel="Email Address"
+                passwordLabel="Password"
+                errorMessage="Please check your credentials"
+                onSuccess={handleSuccess}
+                onNavigateAfterLogin="/dashboard" // Redirect to dashboard after login
+            />
+        </div>
+    );
+};
+
+export default App;
