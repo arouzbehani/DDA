@@ -15,7 +15,7 @@ interface LoginPageProps {
 
 const LoginPage: React.FC<LoginPageProps> = ({
     authUrl,
-    storageKey,
+    storageKey='authToken',
     cssClassName = '',
     emailLabel = 'Email',
     passwordLabel = 'Password',

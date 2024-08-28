@@ -1,4 +1,4 @@
-import LoginPage from '../components/Login/LoginComponent_V1';
+import LoginPage from '../components/Login/v1.0/LoginComponent_V1';
 
 const App: React.FC = () => {
     const handleSuccess = () => {
