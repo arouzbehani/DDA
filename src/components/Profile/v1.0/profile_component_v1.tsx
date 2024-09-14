@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import imageCompression from 'browser-image-compression'; // Import image compression library
+
 import './profile_component_style_v1.css';
 
 type UserData = {
@@ -55,11 +57,38 @@ const ProfileComponent: React.FC<ProfileComponentProps> = ({updateApiUrl, initia
 
         fetchUserData();
     }, [token, initialDataUrl]);
+    // Compress the image and then upload
+    const handleImageCompressionAndUpload = async (file: File) => {
+        setError(null);
+        setUploadProgress(0);
 
+        // Compression options
+        const options = {
+            maxSizeMB: 0.2, // Max size in MB (200KB)
+            maxWidthOrHeight: 1024, // Max width or height to maintain aspect ratio
+            useWebWorker: true, // Enable web workers for better performance
+        };
+
+        try {
+            // Compress the file
+            const compressedFile = await imageCompression(file, options);
+
+            console.log(`Original File Size: ${(file.size / 1024).toFixed(2)}KB`);
+            console.log(`Compressed File Size: ${(compressedFile.size / 1024).toFixed(2)}KB`);
+
+            // Upload the compressed file
+            await handleImageUpload(compressedFile);
+        } catch (err) {
+            setError("Failed to compress the image.");
+        }
+    };
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
             setSelectedFile(file);
+            handleImageUpload(file); // Automatically upload the file when selected
+            handleImageCompressionAndUpload(file); // Compress and upload the file when selected
+
         }
     };
     const handleImageClick = () => {
@@ -67,18 +96,18 @@ const ProfileComponent: React.FC<ProfileComponentProps> = ({updateApiUrl, initia
             fileInputRef.current.click(); // Trigger the file input click
         }
     };
-    const handleImageUpload = async () => {
-        if (!selectedFile) {
-            setError("Please select an image to upload.");
-            return;
+    const handleImageUpload = async (file: File) => {
+        // if (!selectedFile) {
+        //     setError("Please select an image to upload.");
+        //     return;
             
-        }
+        // }
 
         setError(null);
         setUploadProgress(0); // Reset progress
 
         const formData = new FormData();
-        formData.append('profilePic', selectedFile, selectedFile.name);
+        formData.append('profilePic', file, file.name);
 
         try {
             const response = await axios.put(imageUploadApiUrl, formData, {
@@ -117,37 +146,37 @@ const ProfileComponent: React.FC<ProfileComponentProps> = ({updateApiUrl, initia
             formData.append('lastName', lastName);
             formData.append('phone', phone);
 
-            if (selectedFile) {
-                formData.append('profilePic', selectedFile, selectedFile.name);
-            } else {
-                formData.append('profilePicUrl', profilePicUrl);
-            }
+            // if (selectedFile) {
+            //     formData.append('profilePic', selectedFile, selectedFile.name);
+            // } else {
+            //     formData.append('profilePicUrl', profilePicUrl);
+            // }
 
             const response = await axios.put(updateApiUrl, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data',
                 },
-                onUploadProgress: (progressEvent) => {
-                    if (progressEvent.total) {
-                        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                        setProgress(percentCompleted);
-                    } else if (selectedFile) {
-                        // Fallback if progressEvent.total is not available
-                        const percentCompleted = Math.round((progressEvent.loaded * 100) / selectedFile.size);
-                        setProgress(percentCompleted);
-                    }
-                },
+                // onUploadProgress: (progressEvent) => {
+                //     if (progressEvent.total) {
+                //         const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                //         setProgress(percentCompleted);
+                //     } else if (selectedFile) {
+                //         // Fallback if progressEvent.total is not available
+                //         const percentCompleted = Math.round((progressEvent.loaded * 100) / selectedFile.size);
+                //         setProgress(percentCompleted);
+                //     }
+                // },
 
             });
 
             // Update the profile image URL after a successful upload
-            const updatedUserData = response.data;
-            setProfilePictureUrl(updatedUserData.profilePicUrl); // Assuming this is returned from the server
+            // const updatedUserData = response.data;
+            // setProfilePictureUrl(updatedUserData.profilePicUrl); // Assuming this is returned from the server
 
             setSuccessMessage("Profile updated successfully!");
-            setUserData(updatedUserData);
-            setProgress(0); // Reset progress
+            setUserData(response.data);
+            // setProgress(0); // Reset progress
 
         } catch (err) {
             if (axios.isAxiosError(err)) {
@@ -165,38 +194,41 @@ const ProfileComponent: React.FC<ProfileComponentProps> = ({updateApiUrl, initia
     return (
         <div className={`profile-component ${customCssClass}`}>
             <form onSubmit={handleSubmit}>
-                <div className="profile-picture">
-                <img src={profilePicUrl || 'default-profile.png'} alt="Profile" />
-                    <input type="file" accept="image/*" onChange={handleFileChange} />
-                    <button type="button" onClick={handleImageUpload}>
-                        Upload Profile Picture
-                    </button>
+                <div className="profile-picture" onClick={() => fileInputRef.current?.click()}>
+                    <img src={baseApiUrl +'/'+ profilePicUrl || 'default-profile.png'} alt="Profile" />
                     {uploadProgress > 0 && (
                         <div className="progress-bar">
                             <div className="progress" style={{ width: `${uploadProgress}%` }}></div>
                         </div>
                     )}
                 </div>
+
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{ display: 'none' }} // Hide the file input
+                    accept="image/*"
+                    onChange={handleFileChange}
+                />
+
                 <div className="form-group">
                     <label>First Name</label>
                     <input
                         type="text"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        className={error && !firstName ? 'error' : ''}
                     />
-                    {error && !firstName && <span className="error-message">First Name is required.</span>}
                 </div>
+
                 <div className="form-group">
                     <label>Last Name</label>
                     <input
                         type="text"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        className={error && !lastName ? 'error' : ''}
                     />
-                    {error && !lastName && <span className="error-message">Last Name is required.</span>}
                 </div>
+
                 <div className="form-group">
                     <label>Phone</label>
                     <input
@@ -205,28 +237,9 @@ const ProfileComponent: React.FC<ProfileComponentProps> = ({updateApiUrl, initia
                         onChange={(e) => setPhoneNumber(e.target.value)}
                     />
                 </div>
-                {/* <div className="form-group">
-                    <label>Profile Picture URL</label>
-                    <input
-                        type="text"
-                        value={profilePicUrl}
-                        onChange={(e) => setProfilePictureUrl(e.target.value)}
-                    // disabled={!!selectedFile} // Disable if file is selected
-                    />
-                </div> */}
-                {/* <div className="form-group">
-                    <label>Upload Profile Picture</label>
-                    <input type="file" accept="image/*" onChange={handleFileChange} />
-                </div> */}
-                {/* Progress Bar */}
-                {progress > 0 && (
-                    <div className="progress-bar">
-                        <div className="progress" style={{ width: `${progress}%` }}>
-                            {progress}%
-                        </div>
-                    </div>
-                )}
-                <button type="submit">Update Profile</button>
+
+                <button type="submit">Update Profile Info</button>
+
                 {error && <div className="error-message">{error}</div>}
                 {successMessage && <div className="success-message">{successMessage}</div>}
             </form>
