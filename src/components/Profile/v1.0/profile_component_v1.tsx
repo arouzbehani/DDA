@@ -71,6 +71,7 @@ const ProfileComponent: React.FC<ProfileComponentProps> = ({updateApiUrl, initia
         if (!selectedFile) {
             setError("Please select an image to upload.");
             return;
+            
         }
 
         setError(null);
