@@ -16,7 +16,7 @@ const App: React.FC = () => {
                 passwordLabel="Password"
                 errorMessage="Please check your credentials"
                 onSuccess={handleSuccess}
-                onNavigateAfterLogin="/profile" // Redirect to dashboard after login
+                onNavigateAfterLogin="/documents" // Redirect to dashboard after login
             />
         </div>
     );

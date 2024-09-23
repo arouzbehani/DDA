@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
+import Documents from './pages/Documents';
 import Register from './pages/Register';
 import Dashboard from './pages/DashboardPage';
 import PrivateRoute from './components/PrivateRoute';
@@ -30,6 +31,14 @@ const App: React.FC = () => {
                     </PrivateRoute>
                 }
             />            
+            <Route
+                path="/documents"
+                element={
+                    <PrivateRoute>
+                        <Documents />
+                    </PrivateRoute>
+                }
+            />                  
         </Routes>
     );
 };
