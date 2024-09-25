@@ -14,6 +14,10 @@ interface DocumentDTO {
   dateUploaded: string;
   url: string;
 }
+interface DocumentUploadDTO {
+  name: string;
+  description?: string;
+}
 
 const DocumentGalleryComponent: React.FC <DocumentUploadtProps>= ({baseApiUrl,uploadApi,galleryApi,customCssClass}) => {
   const [documents, setDocuments] = useState<DocumentDTO[]>([]);
@@ -57,16 +61,22 @@ const DocumentGalleryComponent: React.FC <DocumentUploadtProps>= ({baseApiUrl,up
       alert('Please select a file to upload.');
       return;
     }
-
+  
     const formData = new FormData();
     formData.append('file', selectedFile);
-
+  
+    // Add document metadata to FormData (if applicable)
+    formData.append('documentDto.DocumentName', 'documentName'); // Assuming documentName comes from state or a form input
+    formData.append('documentDto.Description', 'documentDescription'); // Assuming documentDescription comes from state or a form input
+    formData.append('documentDto.Description', 'documentDescription');
+    formData.append('documentDto.Description', 'documentDescription');
+    formData.append('documentDto.Description', 'documentDescription');
+    formData.append('documentDto.Description', 'documentDescription');
     try {
-
       const response = await axios.post(uploadApi, formData, {
-        params: { userAccessToken },
         headers: {
           'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${userAccessToken}` // Pass the token in the Authorization header
         },
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
@@ -75,7 +85,7 @@ const DocumentGalleryComponent: React.FC <DocumentUploadtProps>= ({baseApiUrl,up
           }
         },
       });
-
+  
       if (response.status === 200) {
         // Fetch the updated document list after successful upload
         fetchDocuments();
@@ -87,7 +97,7 @@ const DocumentGalleryComponent: React.FC <DocumentUploadtProps>= ({baseApiUrl,up
       setError('Failed to upload document.');
     }
   };
-
+  
   // Handle document download
   const onDownload = (url: string) => {
     window.open(url, '_blank');
